@@ -1,7 +1,7 @@
 {
     "name": "ellephanty/model",
     "description": "Models like laravel using javascript signs",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "type": "library",
     "license": "MIT",
     "autoload": {
