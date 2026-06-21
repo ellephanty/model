@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f859d1fa5aa9b1b88cbd2abdef1d04fb",
+    "content-hash": "ecf8d85d73d55aefeb6dee46cd747bdf",
     "packages": [
         {
             "name": "ellephanty/database",
-            "version": "0.0.2",
+            "version": "0.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ellephanty/database.git",
-                "reference": "2b86a51b083bb6b5a5a989a9a36cc30d9781ff76"
+                "reference": "aa7ab2ab49f635ccac4f299cffca4c8fdd93843c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ellephanty/database/zipball/2b86a51b083bb6b5a5a989a9a36cc30d9781ff76",
-                "reference": "2b86a51b083bb6b5a5a989a9a36cc30d9781ff76",
+                "url": "https://api.github.com/repos/ellephanty/database/zipball/aa7ab2ab49f635ccac4f299cffca4c8fdd93843c",
+                "reference": "aa7ab2ab49f635ccac4f299cffca4c8fdd93843c",
                 "shasum": ""
             },
             "require": {
@@ -45,9 +45,9 @@
             "description": "Database conection using PDO and .env variables",
             "support": {
                 "issues": "https://github.com/ellephanty/database/issues",
-                "source": "https://github.com/ellephanty/database/tree/v0.0.2"
+                "source": "https://github.com/ellephanty/database/tree/v0.0.3"
             },
-            "time": "2026-06-19T23:45:39+00:00"
+            "time": "2026-06-20T22:48:48+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
