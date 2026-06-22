@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ecf8d85d73d55aefeb6dee46cd747bdf",
+    "content-hash": "3a74e3dfb2f070eb2dd67e811de936c0",
     "packages": [
         {
             "name": "ellephanty/database",
