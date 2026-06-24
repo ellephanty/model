@@ -9,6 +9,7 @@ class Model
     public $table;
     private $where = array();
     private static $database;
+    protected $with = [];
 
     public function __construct($where = array())
     {
@@ -130,6 +131,10 @@ class Model
         $stmt->execute();
         $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+        if (!empty($this->with)) {
+            $result = $this->eagerLoad($result, $this->with);
+        }
+
         return $result;
     }
 
@@ -161,5 +166,53 @@ class Model
         $className = preg_replace('/(?<!^)[A-Z]/', '_$0', $className);
 
         return strtoupper($className);
+    }
+
+    public function with($relations)
+    {
+        $this->with = is_array($relations) ? $relations : [$relations];
+        return $this;
+    }
+
+    protected function eagerLoad($rows, $relations)
+    {
+        foreach ($relations as $relation) {
+
+            if (!method_exists($this, $relation)) {
+                continue;
+            }
+
+            $relationMeta = $this->$relation();
+
+            $relatedClass = $relationMeta['model'];
+            $foreignKey = $relationMeta['foreignKey'];
+            $localKey = $relationMeta['localKey'];
+
+            $ids = array_column($rows, $localKey);
+            $ids = array_unique($ids);
+
+            if (empty($ids)) {
+                continue;
+            }
+
+            $in = implode(',', array_map(function ($id) {
+                return is_numeric($id) ? $id : "'$id'";
+            }, $ids));
+
+            $relatedRows = (new $relatedClass)->findAll([
+                'where_raw' => "$foreignKey IN ($in)"
+            ]);
+
+            $map = [];
+            foreach ($relatedRows as $r) {
+                $map[$r[$foreignKey]] = $r;
+            }
+
+            foreach ($rows as &$row) {
+                $row[$relation] = $map[$row[$localKey]] ? $map[$row[$localKey]] : null;
+            }
+        }
+
+        return $rows;
     }
 }

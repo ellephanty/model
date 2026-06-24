@@ -1,9 +1,11 @@
 {
     "name": "ellephanty/model",
     "description": "Models like laravel using javascript signs",
-    "version": "0.0.5",
     "type": "library",
     "license": "MIT",
+    "scripts": {
+        "test": "phpunit"
+    },
     "autoload": {
         "psr-4": {
             "Ellephanty\\Model\\": "src/"
