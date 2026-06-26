@@ -19,7 +19,7 @@
     ],
     "require": {
         "ellephanty/database": "0.0.3",
-        "ellephanty/collecty": "^0.0.1"
+        "ellephanty/collecty": "0.0.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^5.7",
