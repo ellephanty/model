@@ -4,8 +4,48 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4c64699d2b472a95529d3dd3185d0d15",
+    "content-hash": "930908a2be15bb43176af31d1e2ebc84",
     "packages": [
+        {
+            "name": "ellephanty/collecty",
+            "version": "v0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ellephanty/collecty.git",
+                "reference": "0fc01aec0b5c0a2f49df66ee97ec1b6de2f6e26e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ellephanty/collecty/zipball/0fc01aec0b5c0a2f49df66ee97ec1b6de2f6e26e",
+                "reference": "0fc01aec0b5c0a2f49df66ee97ec1b6de2f6e26e",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^5.7"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ellephanty\\Collecty\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Cristian Emanuelle Guzmán Suárez",
+                    "email": "cristian.guzman.contacto@gmail.com"
+                }
+            ],
+            "description": "Array collection like laravel",
+            "support": {
+                "issues": "https://github.com/ellephanty/collecty/issues",
+                "source": "https://github.com/ellephanty/collecty/tree/v0.0.1"
+            },
+            "time": "2026-06-25T23:45:15+00:00"
+        },
         {
             "name": "ellephanty/database",
             "version": "0.0.3",

@@ -3,6 +3,7 @@
 namespace Ellephanty\Model;
 
 use Ellephanty\Database\Database;
+use Ellephanty\Collecty\Collection;
 
 class Model
 {
@@ -135,7 +136,7 @@ class Model
             $result = $this->eagerLoad($result, $this->with);
         }
 
-        return $result;
+        return new Collection($result);
     }
 
     public function findOne($options = array())
