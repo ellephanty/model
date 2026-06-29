@@ -9,8 +9,7 @@ class QueryBuilder extends BaseQueryBuilder
 
     public function where(array $where)
     {
-        $this->wheres = $where;
-
+        $this->wheres = array_merge($this->wheres ? $this->wheres : [], $where);
         return $this;
     }
 
@@ -30,13 +29,12 @@ class QueryBuilder extends BaseQueryBuilder
         return $this;
     }
 
+    /**
+     * @param string $column
+     */
     public function whereIn($column, array $values)
     {
-        $this->whereIns[] = [
-            'column' => $column,
-            'values' => $values,
-        ];
-
+        $this->whereIns[$column] = $values;
         return $this;
     }
 }

@@ -138,11 +138,40 @@ class BaseQueryBuilder
                     }
                 }
             }
-            if (count($conditions) > 0) {
-                $query = str_replace("<where>", implode(" AND ", $conditions), $query);
-            } else {
-                $query = str_replace(" WHERE <where>", "", $query);
+        }
+
+        if (!empty($this->whereIns)) {
+            foreach ($this->whereIns as $column => $values) {
+
+                if (!is_array($values) || empty($values)) {
+                    continue;
+                }
+
+                $cleanValues = [];
+
+                foreach ($values as $value) {
+
+                    if (is_array($value) || is_object($value)) {
+                        continue;
+                    }
+
+                    if (is_int($value) || is_float($value)) {
+                        $cleanValues[] = $value;
+                    } elseif (is_string($value)) {
+                        $cleanValues[] = "'" . addslashes($value) . "'";
+                    } elseif (is_null($value)) {
+                        $cleanValues[] = "NULL";
+                    }
+                }
+
+                if (!empty($cleanValues)) {
+                    $conditions[] = "$column IN (" . implode(", ", $cleanValues) . ")";
+                }
             }
+        }
+
+        if (count($conditions) > 0) {
+            $query = str_replace("<where>", implode(" AND ", $conditions), $query);
         } else {
             $query = str_replace(" WHERE <where>", "", $query);
         }
@@ -168,5 +197,10 @@ class BaseQueryBuilder
         $query = preg_replace('/\s+/', ' ', $query);
 
         return $query;
+    }
+
+    public function query()
+    {
+        return $this->buildQuery();
     }
 }
