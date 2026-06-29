@@ -37,4 +37,10 @@ class QueryBuilder extends BaseQueryBuilder
         $this->whereIns[$column] = $values;
         return $this;
     }
+
+    public function orderBy($column, $order = 'ASC')
+    {
+        $this->orderBy = [$column, $order];
+        return $this;
+    }
 }

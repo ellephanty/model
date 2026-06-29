@@ -19,6 +19,8 @@ class BaseQueryBuilder
 
     protected $syntax;
 
+    protected $orderBy;
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -71,11 +73,11 @@ class BaseQueryBuilder
     {
         switch (getenv("DB_DSN")) {
             case 'dblib':
-                $query = "SELECT <limit> <distinct> <attributes> FROM {$this->model->table()} WHERE <where>";
+                $query = "SELECT <limit> <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <order>";
                 break;
 
             case 'mysql':
-                $query = "SELECT <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <limit>";
+                $query = "SELECT <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <order> <limit>";
                 break;
 
             default:
@@ -178,7 +180,12 @@ class BaseQueryBuilder
 
         // Si se paso un ordenamiento se aplica
         if (isset($options["order"])) {
-            $query .= " ORDER BY " . $options["order"][0][0] . " " . $options["order"][0][1];
+            $this->orderBy = $options["order"][0];
+        }
+        if (isset($this->orderBy)) {
+            $query = str_replace("<order>", " ORDER BY " . $this->orderBy[0] . " " . $this->orderBy[1], $query);
+        } else {
+            $query = str_replace("<order>", "", $query);
         }
 
         if (isset($options["distinct"]) && $options["distinct"] == true) {
