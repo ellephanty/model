@@ -15,9 +15,14 @@ class BaseQueryBuilder
 
     protected $whereIns = [];
 
+    protected $limit;
+
+    protected $syntax;
+
     public function __construct(Model $model)
     {
         $this->model = $model;
+        $this->syntax = include __DIR__ . '/../config/syntaxis.php';
     }
 
     public function findAll($options = array())
@@ -35,47 +40,22 @@ class BaseQueryBuilder
         return new Collection($result);
     }
 
-    protected function eagerLoad($rows, $relations)
+    protected function eagerLoad($rows)
     {
-        foreach ($relations as $relation) {
+        foreach ($this->with as $name) {
 
-            if (!method_exists($this->model, $relation)) {
+            if (!method_exists($this->model, $name)) {
                 continue;
             }
 
-            $relationMeta = $this->model->$relation();
+            $relation = $this->model->$name()->setName($name);
 
-            $relatedClass = $relationMeta['model'];
-            $foreignKey = $relationMeta['foreignKey'];
-            $localKey = $relationMeta['localKey'];
-
-            $ids = array_column($rows, $localKey);
-            $ids = array_unique($ids);
-
-            if (empty($ids)) {
-                continue;
-            }
-
-            $in = implode(',', array_map(function ($id) {
-                return is_numeric($id) ? $id : "'$id'";
-            }, $ids));
-
-            $relatedRows = $relatedClass::query()
-                ->whereIn($foreignKey, $ids)
-                ->findAll();
-
-            $map = [];
-            foreach ($relatedRows as $r) {
-                $map[$r[$foreignKey]] = $r;
-            }
-
-            foreach ($rows as &$row) {
-                $row[$relation] = $map[$row[$localKey]] ? $map[$row[$localKey]] : null;
-            }
+            $rows = $relation->eagerLoad($rows);
         }
 
         return $rows;
     }
+
     public function findOne($options = array())
     {
         $query = $this->buildQuery($options);
@@ -89,7 +69,21 @@ class BaseQueryBuilder
 
     private function buildQuery($options = array())
     {
-        $query = "SELECT <distinct> <attributes> FROM " . $this->model->table() . " WHERE <where>";
+        switch (getenv("DB_DSN")) {
+            case 'dblib':
+                $query = "SELECT <limit> <distinct> <attributes> FROM {$this->model->table()} WHERE <where>";
+                break;
+
+            case 'mysql':
+                $query = "SELECT <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <limit>";
+                break;
+
+            default:
+                throw new \Exception(
+                    "No se ha configurado un driver de base de datos válido en DB_DSN."
+                );
+        }
+
 
         // Las columnas que se quieren obtener
         if (isset($options["attributes"]) && count($options["attributes"]) > 0) {
@@ -162,6 +156,12 @@ class BaseQueryBuilder
             $query = str_replace("<distinct>", "DISTINCT", $query);
         } else {
             $query = str_replace("<distinct>", "", $query);
+        }
+
+        if (isset($this->limit)) {
+            $query = str_replace("<limit>", $this->syntax[getenv('DB_DSN')]['LIMIT'] . " " . $this->limit, $query);
+        } else {
+            $query = str_replace("<limit>", "", $query);
         }
 
         // Remueve doble espacio si hay

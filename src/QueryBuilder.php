@@ -14,6 +14,13 @@ class QueryBuilder extends BaseQueryBuilder
         return $this;
     }
 
+    public function limit($limit)
+    {
+        $this->limit = $limit;
+
+        return $this;
+    }
+
     public function with($relations)
     {
         $this->with = is_array($relations)

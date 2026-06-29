@@ -4,6 +4,7 @@ namespace Ellephanty\Model;
 
 use Ellephanty\Database\Database;
 use Ellephanty\Model\QueryBuilder;
+use Ellephanty\Model\BelongsTo;
 
 class Model
 {
@@ -50,5 +51,10 @@ class Model
         $className = preg_replace('/(?<!^)[A-Z]/', '_$0', $className);
 
         return strtoupper($className);
+    }
+
+    public function belongsTo($model, $foreignKey, $localKey)
+    {
+        return new BelongsTo($model, $foreignKey, $localKey);
     }
 }
