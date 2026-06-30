@@ -69,7 +69,7 @@ class BaseQueryBuilder
         return $result;
     }
 
-    private function buildQuery($options = array())
+    protected function buildQuery($options = array())
     {
         switch (getenv("DB_DSN")) {
             case 'dblib':

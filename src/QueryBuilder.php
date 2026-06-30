@@ -43,4 +43,22 @@ class QueryBuilder extends BaseQueryBuilder
         $this->orderBy = [$column, $order];
         return $this;
     }
+
+    public function exists()
+    {
+        $query = $this->buildQuery([
+            'attributes' => ['1'],
+        ]);
+
+        $this->limit = 1;
+
+        $query = $this->buildQuery([
+            'attributes' => ['1'],
+        ]);
+
+        $stmt = $this->model->connection()->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
+    }
 }
