@@ -61,4 +61,32 @@ class QueryBuilder extends BaseQueryBuilder
 
         return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
     }
+
+    public function update(array $attributes)
+    {
+        $set = [];
+        $bindings = [];
+
+        foreach ($attributes as $column => $value) {
+            $set[] = "{$column} = ?";
+            $bindings[] = $value;
+        }
+
+        $sql = "UPDATE {$this->model->table()} SET " . implode(', ', $set);
+
+        if (!empty($this->wheres)) {
+            $where = [];
+
+            foreach ($this->wheres as $column => $value) {
+                $where[] = "{$column} = ?";
+                $bindings[] = $value;
+            }
+
+            $sql .= " WHERE " . implode(' AND ', $where);
+        }
+
+        $stmt = $this->model->connection()->prepare($sql);
+
+        return $stmt->execute($bindings);
+    }
 }
