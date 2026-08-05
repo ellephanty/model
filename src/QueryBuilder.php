@@ -89,4 +89,10 @@ class QueryBuilder extends BaseQueryBuilder
 
         return $stmt->execute($bindings);
     }
+
+    public function max($column) {
+        $stmt = $this->model->connection()->prepare("SELECT MAX($column) FROM {$this->model->table()}");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
 }
