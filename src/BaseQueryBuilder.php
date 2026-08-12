@@ -21,6 +21,8 @@ class BaseQueryBuilder
 
     protected $orderBy;
 
+    protected $attributes = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -88,15 +90,18 @@ class BaseQueryBuilder
 
 
         // Las columnas que se quieren obtener
-        if (isset($options["attributes"]) && count($options["attributes"]) > 0) {
+
+        $attributes = isset($options["attributes"]) ? $options["attributes"] : $this->attributes;
+
+        if (count($attributes) > 0) {
 
             // Si el atributo es un array se sustituye el array por el nombre de la columna con el alias
-            foreach ($options["attributes"] as $attribute) {
+            foreach ($attributes as $attribute) {
                 if (is_array($attribute)) {
-                    $options["attributes"][array_search($attribute, $options["attributes"])] = $attribute[0] . " AS " . $attribute[1];
+                    $attributes[array_search($attribute, $attributes)] = $attribute[0] . " AS " . $attribute[1];
                 }
             }
-            $query = str_replace("<attributes>", implode(", ", $options["attributes"]), $query);
+            $query = str_replace("<attributes>", implode(", ", $attributes), $query);
         } else {
             $query = str_replace("<attributes>", "*", $query);
         }

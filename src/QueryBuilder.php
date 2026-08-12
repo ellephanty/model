@@ -62,6 +62,15 @@ class QueryBuilder extends BaseQueryBuilder
         return $stmt->fetch(\PDO::FETCH_ASSOC) !== false;
     }
 
+    public function select($columns)
+    {
+        $this->attributes = is_array($columns)
+            ? $columns
+            : func_get_args();
+
+        return $this;
+    }
+
     public function update(array $attributes)
     {
         $set = [];
@@ -90,7 +99,8 @@ class QueryBuilder extends BaseQueryBuilder
         return $stmt->execute($bindings);
     }
 
-    public function max($column) {
+    public function max($column)
+    {
         $stmt = $this->model->connection()->prepare("SELECT MAX($column) FROM {$this->model->table()}");
         $stmt->execute();
         return $stmt->fetchColumn();
