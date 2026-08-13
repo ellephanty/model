@@ -3,7 +3,6 @@
 namespace Ellephanty\Model;
 
 use Ellephanty\Model\Model;
-use Ellephanty\Collecty\Collection;
 
 class BaseQueryBuilder
 {
@@ -41,7 +40,7 @@ class BaseQueryBuilder
             $result = $this->eagerLoad($result, $this->with);
         }
 
-        return new Collection($result);
+        return $this->model->newCollection($result);
     }
 
     protected function eagerLoad($rows)

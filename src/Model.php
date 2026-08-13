@@ -5,6 +5,7 @@ namespace Ellephanty\Model;
 use Ellephanty\Database\Database;
 use Ellephanty\Model\QueryBuilder;
 use Ellephanty\Model\BelongsTo;
+use Ellephanty\Collecty\Collection;
 
 class Model
 {
@@ -56,5 +57,10 @@ class Model
     public function belongsTo($model, $foreignKey, $localKey)
     {
         return new BelongsTo($model, $foreignKey, $localKey);
+    }
+
+    public function newCollection(array $models = [])
+    {
+        return new Collection($models);
     }
 }
