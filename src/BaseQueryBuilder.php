@@ -67,6 +67,10 @@ class BaseQueryBuilder
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
+        if(!$result) {
+            return null;
+        }
+
         return $this->model->entity($result);
     }
 
