@@ -67,7 +67,7 @@ class BaseQueryBuilder
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        return $result;
+        return $this->model->entity($result);
     }
 
     protected function buildQuery($options = array())

@@ -6,6 +6,7 @@ use Ellephanty\Database\Database;
 use Ellephanty\Model\QueryBuilder;
 use Ellephanty\Model\BelongsTo;
 use Ellephanty\Collecty\Collection;
+use Ellephanty\Collecty\Entity;
 
 class Model
 {
@@ -62,5 +63,10 @@ class Model
     public function newCollection(array $models = [])
     {
         return new Collection($models);
+    }
+
+    public function entity(array $entity)
+    {
+        return new Entity($entity);
     }
 }
