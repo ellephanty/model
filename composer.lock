@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "43d2ab13fa2cbc5d24d35ab502b8fd89",
+    "content-hash": "97b78e8a9c9068517ed57bc3913f7a14",
     "packages": [
         {
             "name": "ellephanty/collecty",
-            "version": "v0.0.4",
+            "version": "v0.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ellephanty/collecty.git",
-                "reference": "61837ff878b7b52e7ee4b949b4112a473f6ee757"
+                "reference": "a3ebfd18d70d16c22bac4cf1244182bc9df0d934"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ellephanty/collecty/zipball/61837ff878b7b52e7ee4b949b4112a473f6ee757",
-                "reference": "61837ff878b7b52e7ee4b949b4112a473f6ee757",
+                "url": "https://api.github.com/repos/ellephanty/collecty/zipball/a3ebfd18d70d16c22bac4cf1244182bc9df0d934",
+                "reference": "a3ebfd18d70d16c22bac4cf1244182bc9df0d934",
                 "shasum": ""
             },
             "require-dev": {
@@ -42,9 +42,9 @@
             "description": "Array collection like laravel",
             "support": {
                 "issues": "https://github.com/ellephanty/collecty/issues",
-                "source": "https://github.com/ellephanty/collecty/tree/v0.0.4"
+                "source": "https://github.com/ellephanty/collecty/tree/v0.0.5"
             },
-            "time": "2026-06-26T23:07:49+00:00"
+            "time": "2026-08-15T01:18:59+00:00"
         },
         {
             "name": "ellephanty/database",
