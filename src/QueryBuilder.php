@@ -105,4 +105,14 @@ class QueryBuilder extends BaseQueryBuilder
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+
+    public function whereHas($relation, callable $callback = null)
+    {
+        $this->whereHas[] = [
+            'relation' => $relation,
+            'callback' => $callback,
+        ];
+
+        return $this;
+    }
 }

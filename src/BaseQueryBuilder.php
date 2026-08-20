@@ -67,7 +67,7 @@ class BaseQueryBuilder
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if(!$result) {
+        if (!$result) {
             return null;
         }
 
@@ -77,12 +77,20 @@ class BaseQueryBuilder
     protected function buildQuery($options = array())
     {
         switch (getenv("DB_DSN")) {
+
             case 'dblib':
-                $query = "SELECT <limit> <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <order>";
+                $query = "SELECT <limit> <distinct> <attributes>
+                      FROM {$this->model->table()}
+                      WHERE <where>
+                      <order>";
                 break;
 
             case 'mysql':
-                $query = "SELECT <distinct> <attributes> FROM {$this->model->table()} WHERE <where> <order> <limit>";
+                $query = "SELECT <distinct> <attributes>
+                      FROM {$this->model->table()}
+                      WHERE <where>
+                      <order>
+                      <limit>";
                 break;
 
             default:
@@ -91,127 +99,280 @@ class BaseQueryBuilder
                 );
         }
 
-
         // Las columnas que se quieren obtener
-
-        $attributes = isset($options["attributes"]) ? $options["attributes"] : $this->attributes;
+        $attributes = isset($options["attributes"])
+            ? $options["attributes"]
+            : $this->attributes;
 
         if (count($attributes) > 0) {
 
-            // Si el atributo es un array se sustituye el array por el nombre de la columna con el alias
-            foreach ($attributes as $attribute) {
+            foreach ($attributes as $key => $attribute) {
+
                 if (is_array($attribute)) {
-                    $attributes[array_search($attribute, $attributes)] = $attribute[0] . " AS " . $attribute[1];
+                    $attributes[$key] =
+                        $attribute[0] . " AS " . $attribute[1];
                 }
             }
-            $query = str_replace("<attributes>", implode(", ", $attributes), $query);
+
+            $query = str_replace(
+                "<attributes>",
+                implode(", ", $attributes),
+                $query
+            );
         } else {
-            $query = str_replace("<attributes>", "*", $query);
+
+            $query = str_replace(
+                "<attributes>",
+                "*",
+                $query
+            );
         }
 
-        $conditions = array();
+        /*
+     * WHERE
+     */
+        $conditions = $this->buildConditions();
 
-        // Las condiciones que se quieren aplicar
-        if (isset($this->wheres) && count($this->wheres) > 0) {
-            foreach ($this->wheres as $column => $whereValue) {
+        /*
+     * whereHas
+     */
+        if (!empty($this->whereHas)) {
 
-                // Ejemplo: ["CLAVE" => "1234"]
-                if (!is_array($whereValue)) {
-                    if (is_int($whereValue)) {
-                        $conditions[] = "$column = $whereValue";
-                    } else {
-                        $conditions[] = "$column = '" . addslashes($whereValue) . "'";
-                    }
-                    continue;
-                }
+            foreach ($this->whereHas as $whereHas) {
 
-                // Ejemplo: ["CLAVE" => ["length" => 4]]
-                if (isset($whereValue['length'])) {
-                    $conditions[] = "LEN($column) = " . intval($whereValue['length']);
-                }
-
-                // Ejemplo: ["CLAVE" => ["numerico" => true]]
-                if (!empty($whereValue['numerico'])) {
-                    $conditions[] = "$column NOT LIKE '%[^0-9]%'";
-                }
-
-                // Ejemplo: ["CLAVE" => ["=" => "1234"]]
-                $operators = ['=', '>', '<', '>=', '<=', '<>', 'LIKE', '!='];
-                foreach ($operators as $operator) {
-                    if (isset($whereValue[$operator])) {
-                        $operatorValue = $whereValue[$operator];
-                        if (is_int($operatorValue)) {
-                            $conditions[] = "$column $operator $operatorValue";
-                        } else {
-                            $conditions[] = "$column $operator '" . addslashes($operatorValue) . "'";
-                        }
-                    }
-                }
-            }
-        }
-
-        if (!empty($this->whereIns)) {
-            foreach ($this->whereIns as $column => $values) {
-
-                if (!is_array($values) || empty($values)) {
-                    continue;
-                }
-
-                $cleanValues = [];
-
-                foreach ($values as $value) {
-
-                    if (is_array($value) || is_object($value)) {
-                        continue;
-                    }
-
-                    if (is_int($value) || is_float($value)) {
-                        $cleanValues[] = $value;
-                    } elseif (is_string($value)) {
-                        $cleanValues[] = "'" . addslashes($value) . "'";
-                    } elseif (is_null($value)) {
-                        $cleanValues[] = "NULL";
-                    }
-                }
-
-                if (!empty($cleanValues)) {
-                    $conditions[] = "$column IN (" . implode(", ", $cleanValues) . ")";
-                }
+                $conditions[] = $this->buildWhereHas(
+                    $whereHas['relation'],
+                    $whereHas['callback']
+                );
             }
         }
 
         if (count($conditions) > 0) {
-            $query = str_replace("<where>", implode(" AND ", $conditions), $query);
+
+            $query = str_replace(
+                "<where>",
+                implode(" AND ", $conditions),
+                $query
+            );
         } else {
-            $query = str_replace(" WHERE <where>", "", $query);
+
+            $query = str_replace(
+                " WHERE <where>",
+                "",
+                $query
+            );
         }
 
-        // Si se paso un ordenamiento se aplica
+        /*
+     * ORDER
+     */
         if (isset($options["order"])) {
             $this->orderBy = $options["order"][0];
         }
+
         if (isset($this->orderBy)) {
-            $query = str_replace("<order>", " ORDER BY " . $this->orderBy[0] . " " . $this->orderBy[1], $query);
+            $query = str_replace(
+                "<order>",
+                " ORDER BY " .
+                    $this->orderBy[0] .
+                    " " .
+                    $this->orderBy[1],
+                $query
+            );
         } else {
-            $query = str_replace("<order>", "", $query);
+            $query = str_replace(
+                "<order>",
+                "",
+                $query
+            );
         }
 
-        if (isset($options["distinct"]) && $options["distinct"] == true) {
-            $query = str_replace("<distinct>", "DISTINCT", $query);
+        /*
+     * DISTINCT
+     */
+        if (
+            isset($options["distinct"]) &&
+            $options["distinct"] == true
+        ) {
+
+            $query = str_replace(
+                "<distinct>",
+                "DISTINCT",
+                $query
+            );
         } else {
-            $query = str_replace("<distinct>", "", $query);
+
+            $query = str_replace(
+                "<distinct>",
+                "",
+                $query
+            );
         }
 
+        /*
+        * LIMIT
+        */
         if (isset($this->limit)) {
-            $query = str_replace("<limit>", $this->syntax[getenv('DB_DSN')]['LIMIT'] . " " . $this->limit, $query);
+
+            $query = str_replace(
+                "<limit>",
+                $this->syntax[getenv('DB_DSN')]['LIMIT']
+                    . " "
+                    . $this->limit,
+                $query
+            );
         } else {
-            $query = str_replace("<limit>", "", $query);
+
+            $query = str_replace(
+                "<limit>",
+                "",
+                $query
+            );
         }
 
-        // Remueve doble espacio si hay
+        // Remueve doble espacio
         $query = preg_replace('/\s+/', ' ', $query);
 
-        return $query;
+        return trim($query);
+    }
+
+    protected function buildWhereHas($relationName, $callback = null)
+    {
+        if (!method_exists($this->model, $relationName)) {
+            throw new \Exception(
+                "The relation {$relationName} does not exist in " .
+                    get_class($this->model)
+            );
+        }
+
+        $relation = $this->model->$relationName();
+        $relatedModelClass = $relation->model();
+
+        $relatedModel = new $relatedModelClass();
+        $relatedBuilder = $relatedModel->query();
+
+        $relatedBuilder = $relatedModelClass::query();
+
+        if ($callback) {
+            call_user_func($callback, $relatedBuilder);
+        }
+
+        $conditions = [];
+
+        $relatedTable = $relatedModel->table();
+        $parentTable = $this->model->table();
+
+        $conditions[] =
+            "{$relatedTable}.{$relation->foreignKey()} = " .
+            "{$parentTable}.{$relation->localKey()}";
+
+        $relatedConditions = $relatedBuilder->getConditions();
+
+        foreach ($relatedConditions as $condition) {
+            $conditions[] = $condition;
+        }
+
+        return "EXISTS (
+        SELECT 1
+        FROM {$relatedTable}
+        WHERE " . implode(" AND ", $conditions) . "
+    )";
+    }
+
+    protected function buildConditions()
+    {
+        $conditions = [];
+
+        foreach ($this->wheres as $column => $whereValue) {
+
+            if (!is_array($whereValue)) {
+
+                if (is_int($whereValue)) {
+                    $conditions[] = "$column = $whereValue";
+                } else {
+                    $conditions[] = "$column = '" . addslashes($whereValue) . "'";
+                }
+
+                continue;
+            }
+
+            if (isset($whereValue['length'])) {
+                $conditions[] =
+                    "LEN($column) = " . intval($whereValue['length']);
+            }
+
+            if (!empty($whereValue['numerico'])) {
+                $conditions[] =
+                    "$column NOT LIKE '%[^0-9]%'";
+            }
+
+            $operators = [
+                '=',
+                '>',
+                '<',
+                '>=',
+                '<=',
+                '<>',
+                'LIKE',
+                '!='
+            ];
+
+            foreach ($operators as $operator) {
+
+                if (isset($whereValue[$operator])) {
+
+                    $operatorValue = $whereValue[$operator];
+
+                    if (is_int($operatorValue)) {
+                        $conditions[] =
+                            "$column $operator $operatorValue";
+                    } else {
+                        $conditions[] =
+                            "$column $operator '" .
+                            addslashes($operatorValue) .
+                            "'";
+                    }
+                }
+            }
+        }
+
+        foreach ($this->whereIns as $column => $values) {
+
+            if (!is_array($values) || empty($values)) {
+                continue;
+            }
+
+            $cleanValues = [];
+
+            foreach ($values as $value) {
+
+                if (is_array($value) || is_object($value)) {
+                    continue;
+                }
+
+                if (is_int($value) || is_float($value)) {
+                    $cleanValues[] = $value;
+                } elseif (is_string($value)) {
+                    $cleanValues[] = "'" . addslashes($value) . "'";
+                } elseif (is_null($value)) {
+                    $cleanValues[] = "NULL";
+                }
+            }
+
+            if (!empty($cleanValues)) {
+                $conditions[] =
+                    "$column IN (" .
+                    implode(", ", $cleanValues) .
+                    ")";
+            }
+        }
+
+        return $conditions;
+    }
+
+    public function getConditions()
+    {
+        return $this->buildConditions();
     }
 
     public function query()
