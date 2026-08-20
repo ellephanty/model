@@ -7,9 +7,22 @@ use Ellephanty\Model\BaseQueryBuilder;
 class QueryBuilder extends BaseQueryBuilder
 {
 
-    public function where(array $where)
+    public function where($column, $operator = null, $value = null)
     {
-        $this->wheres = array_merge($this->wheres ? $this->wheres : [], $where);
+        // Forma: where(['columna' => 'valor'])
+        if (is_array($column)) {
+            $this->wheres = array_merge(
+                $this->wheres ? $this->wheres : [],
+                $column
+            );
+
+            return $this;
+        }
+
+        $this->wheres[$column] = [
+            $operator => $value
+        ];
+
         return $this;
     }
 
