@@ -35,9 +35,21 @@ class QueryBuilder extends BaseQueryBuilder
 
     public function with($relations)
     {
-        $this->with = is_array($relations)
-            ? $relations
-            : [$relations];
+        if (!is_array($relations)) {
+            $relations = [$relations];
+        }
+
+        foreach ($relations as $name => $callback) {
+
+            // with('relacion')
+            if (is_int($name)) {
+                $this->with[$callback] = null;
+                continue;
+            }
+
+            // with(['relacion' => function ($query) {}])
+            $this->with[$name] = $callback;
+        }
 
         return $this;
     }

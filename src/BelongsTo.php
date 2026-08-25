@@ -7,7 +7,7 @@ use Ellephanty\Model\Relation;
 class BelongsTo extends Relation
 {
 
-    public function eagerLoad(array &$rows)
+    public function eagerLoad(array &$rows, $callback = null)
     {
         $foreignKey = $this->foreignKey;
         $localKey = $this->localKey;
@@ -21,18 +21,25 @@ class BelongsTo extends Relation
 
         $modelClass = $this->model();
 
-        $relatedRows = $modelClass::query()
-            ->whereIn($foreignKey, $ids)
-            ->findAll();
+        $query = $modelClass::query();
+        
+        // Aplicar callback del with()
+        if ($callback) {
+            call_user_func($callback, $query);
+        }
+
+        $query = $query->whereIn($localKey, $ids);
+        
+        $relatedRows = $query->findAll();
 
         $map = [];
 
         foreach ($relatedRows as $r) {
-            $map[$r[$foreignKey]] = $r;
+            $map[$r[$localKey]] = $r;
         }
 
         foreach ($rows as &$row) {
-            $key = $row[$localKey];
+            $key = $row[$foreignKey];
 
             $row[$relationName] = isset($map[$key])
                 ? $map[$key]

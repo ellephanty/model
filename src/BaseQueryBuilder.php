@@ -45,7 +45,7 @@ class BaseQueryBuilder
 
     protected function eagerLoad($rows)
     {
-        foreach ($this->with as $name) {
+        foreach ($this->with as $name => $callback) {
 
             if (!method_exists($this->model, $name)) {
                 continue;
@@ -53,7 +53,7 @@ class BaseQueryBuilder
 
             $relation = $this->model->$name()->setName($name);
 
-            $rows = $relation->eagerLoad($rows);
+            $rows = $relation->eagerLoad($rows, $callback);
         }
 
         return $rows;
