@@ -16,6 +16,8 @@ class BaseQueryBuilder
 
     protected $limit;
 
+    protected $offset;
+
     protected $syntax;
 
     protected $orderBy;
@@ -82,7 +84,8 @@ class BaseQueryBuilder
                 $query = "SELECT <limit> <distinct> <attributes>
                       FROM {$this->model->table()}
                       WHERE <where>
-                      <order>";
+                      <order>
+                      <offset>";
                 break;
 
             case 'mysql':
@@ -90,7 +93,8 @@ class BaseQueryBuilder
                       FROM {$this->model->table()}
                       WHERE <where>
                       <order>
-                      <limit>";
+                      <limit>
+                      <offset>";
                 break;
 
             default:
@@ -225,6 +229,45 @@ class BaseQueryBuilder
 
             $query = str_replace(
                 "<limit>",
+                "",
+                $query
+            );
+        }
+
+        /**
+         * OFFSET
+         */
+        if (isset($this->offset)) {
+            $offset = $this->offset;
+
+            switch (getenv('DB_DSN')) {
+                case 'dblib':
+                    $offsetQuery = "OFFSET {$offset} ROWS";
+
+                    if (isset($this->limit)) {
+                        $offsetQuery .= " FETCH NEXT {$this->limit} ROWS ONLY";
+                    }
+
+                    break;
+
+                case 'mysql':
+                    $offsetQuery = "OFFSET {$offset}";
+                    break;
+
+                default:
+                    throw new \Exception(
+                        "No se ha configurado un driver de base de datos válido en DB_DSN."
+                    );
+            }
+
+            $query = str_replace(
+                "<offset>",
+                $offsetQuery,
+                $query
+            );
+        } else {
+            $query = str_replace(
+                "<offset>",
                 "",
                 $query
             );

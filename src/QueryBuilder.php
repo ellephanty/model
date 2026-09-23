@@ -33,6 +33,13 @@ class QueryBuilder extends BaseQueryBuilder
         return $this;
     }
 
+    public function offset($offset)
+    {
+        $this->offset = (int) $offset;
+
+        return $this;
+    }
+
     public function with($relations)
     {
         if (!is_array($relations)) {
