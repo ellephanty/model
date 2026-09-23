@@ -6,21 +6,88 @@ use Ellephanty\Model\BaseQueryBuilder;
 
 class QueryBuilder extends BaseQueryBuilder
 {
-
     public function where($column, $operator = null, $value = null)
     {
-        // Forma: where(['columna' => 'valor'])
-        if (is_array($column)) {
-            $this->wheres = array_merge(
-                $this->wheres ? $this->wheres : [],
-                $column
-            );
+        return $this->addWhere(
+            $column,
+            $operator,
+            $value,
+            'AND'
+        );
+    }
+
+    public function orWhere($column, $operator = null, $value = null)
+    {
+        return $this->addWhere(
+            $column,
+            $operator,
+            $value,
+            'OR'
+        );
+    }
+
+    public function getWheres()
+    {
+        return $this->wheres;
+    }
+
+    protected function addWhere(
+        $column,
+        $operator = null,
+        $value = null,
+        $boolean = 'AND'
+    ) {
+        // where(function ($query) {})
+        if (is_callable($column)) {
+            $query = new static($this->model);
+
+            call_user_func($column, $query);
+
+            $this->wheres[] = [
+                'type' => 'group',
+                'boolean' => $boolean,
+                'wheres' => $query->getWheres()
+            ];
 
             return $this;
         }
 
-        $this->wheres[$column] = [
-            $operator => $value
+        // where(['campo' => 'valor'])
+        if (is_array($column)) {
+            foreach ($column as $name => $condition) {
+                if (is_array($condition)) {
+                    foreach ($condition as $operator => $value) {
+                        $this->wheres[] = [
+                            'type' => 'where',
+                            'column' => $name,
+                            'operator' => $operator,
+                            'value' => $value,
+                            'boolean' => $boolean
+                        ];
+                    }
+
+                    continue;
+                }
+
+                $this->wheres[] = [
+                    'type' => 'where',
+                    'column' => $name,
+                    'operator' => '=',
+                    'value' => $condition,
+                    'boolean' => $boolean
+                ];
+            }
+
+            return $this;
+        }
+
+        // where('campo', 'operador', 'valor')
+        $this->wheres[] = [
+            'type' => 'where',
+            'column' => $column,
+            'operator' => $operator ?: '=',
+            'value' => $value,
+            'boolean' => $boolean
         ];
 
         return $this;
@@ -47,7 +114,6 @@ class QueryBuilder extends BaseQueryBuilder
         }
 
         foreach ($relations as $name => $callback) {
-
             // with('relacion')
             if (is_int($name)) {
                 $this->with[$callback] = null;
@@ -66,26 +132,41 @@ class QueryBuilder extends BaseQueryBuilder
      */
     public function whereIn($column, array $values)
     {
-        $this->whereIns[$column] = $values;
+        $this->wheres[] = [
+            'type' => 'whereIn',
+            'column' => $column,
+            'values' => $values,
+            'boolean' => 'AND'
+        ];
+
+        return $this;
+    }
+
+    public function orWhereIn($column, array $values)
+    {
+        $this->wheres[] = [
+            'type' => 'whereIn',
+            'column' => $column,
+            'values' => $values,
+            'boolean' => 'OR'
+        ];
+
         return $this;
     }
 
     public function orderBy($column, $order = 'ASC')
     {
         $this->orderBy = [$column, $order];
+
         return $this;
     }
 
     public function exists()
     {
-        $query = $this->buildQuery([
-            'attributes' => ['1'],
-        ]);
-
         $this->limit = 1;
 
         $query = $this->buildQuery([
-            'attributes' => ['1'],
+            'attributes' => ['1']
         ]);
 
         $stmt = $this->model->connection()->prepare($query);
@@ -113,17 +194,34 @@ class QueryBuilder extends BaseQueryBuilder
             $bindings[] = $value;
         }
 
-        $sql = "UPDATE {$this->model->table()} SET " . implode(', ', $set);
+        $sql = "UPDATE {$this->model->table()} SET " .
+            implode(', ', $set);
 
         if (!empty($this->wheres)) {
             $where = [];
 
-            foreach ($this->wheres as $column => $value) {
-                $where[] = "{$column} = ?";
-                $bindings[] = $value;
+            foreach ($this->wheres as $condition) {
+                if ($condition['type'] !== 'where') {
+                    throw new \Exception(
+                        'update() actualmente solo soporta condiciones where simples.'
+                    );
+                }
+
+                $where[] =
+                    $condition['boolean'] . ' ' .
+                    $condition['column'] . ' ' .
+                    $condition['operator'] . ' ?';
+
+                $bindings[] = $condition['value'];
             }
 
-            $sql .= " WHERE " . implode(' AND ', $where);
+            $where[0] = preg_replace(
+                '/^AND |^OR /',
+                '',
+                $where[0]
+            );
+
+            $sql .= ' WHERE ' . implode(' ', $where);
         }
 
         $stmt = $this->model->connection()->prepare($sql);
@@ -133,16 +231,20 @@ class QueryBuilder extends BaseQueryBuilder
 
     public function max($column)
     {
-        $stmt = $this->model->connection()->prepare("SELECT MAX($column) FROM {$this->model->table()}");
+        $sql = "SELECT MAX($column) FROM {$this->model->table()}";
+
+        $stmt = $this->model->connection()->prepare($sql);
         $stmt->execute();
+
         return $stmt->fetchColumn();
     }
+
 
     public function whereHas($relation, callable $callback = null)
     {
         $this->whereHas[] = [
             'relation' => $relation,
-            'callback' => $callback,
+            'callback' => $callback
         ];
 
         return $this;
