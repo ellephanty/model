@@ -369,43 +369,48 @@ class BaseQueryBuilder
     protected function buildSimpleWhereCondition($where)
     {
         $column = $where['column'];
-        $operator = strtoupper($where['operator']);
-        $value = $where['value'];
 
-        $operators = [
-            '=',
-            '>',
-            '<',
-            '>=',
-            '<=',
-            '<>',
-            'LIKE',
-            '!=',
-        ];
+        if (isset($where['conditions'])) {
+            $conditions = [];
 
-        if (!in_array($operator, $operators)) {
-            throw new \Exception(
-                "Unsupported operator: {$operator}"
-            );
-        }
+            foreach ($where['conditions'] as $operator => $value) {
+                $operator = strtolower($operator);
 
-        if (is_null($value)) {
-            if ($operator === '=' || $operator === '==') {
-                return "{$column} IS NULL";
+                if ($operator === 'length') {
+                    $conditions[] =
+                        "LEN($column) = " . intval($value);
+
+                    continue;
+                }
+
+                if ($operator === 'numerico') {
+                    if ($value) {
+                        $conditions[] =
+                            "$column NOT LIKE '%[^0-9]%'";
+                    }
+
+                    continue;
+                }
+
+                $conditions[] = $this->buildOperatorCondition(
+                    $column,
+                    $operator,
+                    $value
+                );
             }
 
-            if ($operator === '!=' || $operator === '<>') {
-                return "{$column} IS NOT NULL";
+            if (empty($conditions)) {
+                return null;
             }
+
+            return implode(' AND ', $conditions);
         }
 
-        if (is_int($value) || is_float($value)) {
-            return "{$column} {$operator} {$value}";
-        }
-
-        return "{$column} {$operator} '" .
-            addslashes($value) .
-            "'";
+        return $this->buildOperatorCondition(
+            $column,
+            $where['operator'],
+            $where['value']
+        );
     }
 
     protected function buildGroupCondition($where)
@@ -485,9 +490,12 @@ class BaseQueryBuilder
             "'";
     }
 
-    protected function buildOperatorConditions($column, $whereValue)
-    {
-        $conditions = [];
+    protected function buildOperatorCondition(
+        $column,
+        $operator,
+        $value
+    ) {
+        $operator = strtoupper($operator);
 
         $operators = [
             '=',
@@ -500,27 +508,29 @@ class BaseQueryBuilder
             '!='
         ];
 
-        foreach ($operators as $operator) {
-            if (!isset($whereValue[$operator])) {
-                continue;
-            }
-
-            $value = $whereValue[$operator];
-
-            if (is_int($value)) {
-                $conditions[] =
-                    "$column $operator $value";
-
-                continue;
-            }
-
-            $conditions[] =
-                "$column $operator '" .
-                addslashes($value) .
-                "'";
+        if (!in_array($operator, $operators)) {
+            throw new \Exception(
+                "Unsupported operator: {$operator}"
+            );
         }
 
-        return $conditions;
+        if (is_null($value)) {
+            if ($operator === '=') {
+                return "{$column} IS NULL";
+            }
+
+            if ($operator === '!=' || $operator === '<>') {
+                return "{$column} IS NOT NULL";
+            }
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return "{$column} {$operator} {$value}";
+        }
+
+        return "{$column} {$operator} '" .
+            addslashes($value) .
+            "'";
     }
 
     protected function buildWhereInCondition($where)
