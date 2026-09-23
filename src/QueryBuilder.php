@@ -56,15 +56,12 @@ class QueryBuilder extends BaseQueryBuilder
         if (is_array($column)) {
             foreach ($column as $name => $condition) {
                 if (is_array($condition)) {
-                    foreach ($condition as $operator => $value) {
-                        $this->wheres[] = [
-                            'type' => 'where',
-                            'column' => $name,
-                            'operator' => $operator,
-                            'value' => $value,
-                            'boolean' => $boolean
-                        ];
-                    }
+                    $this->wheres[] = [
+                        'type' => 'where',
+                        'column' => $name,
+                        'conditions' => $condition,
+                        'boolean' => $boolean
+                    ];
 
                     continue;
                 }
