@@ -236,6 +236,29 @@ class QueryBuilder extends BaseQueryBuilder
         return $stmt->fetchColumn();
     }
 
+    public function count()
+    {
+        $limit = $this->limit;
+        $offset = $this->offset;
+        $orderBy = $this->orderBy;
+
+        $this->limit = null;
+        $this->offset = null;
+        $this->orderBy = null;
+
+        $query = $this->buildQuery([
+            'attributes' => ['COUNT(*)']
+        ]);
+
+        $this->limit = $limit;
+        $this->offset = $offset;
+        $this->orderBy = $orderBy;
+
+        $stmt = $this->model->connection()->prepare($query);
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
+    }
 
     public function whereHas($relation, callable $callback = null)
     {
