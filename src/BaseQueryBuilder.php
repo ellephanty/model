@@ -14,6 +14,7 @@ class BaseQueryBuilder
     protected $syntax;
     protected $orderBy;
     protected $attributes = [];
+    protected $whereHas = [];
 
     public function __construct(Model $model)
     {
@@ -276,46 +277,41 @@ class BaseQueryBuilder
     {
         if (!method_exists($this->model, $relationName)) {
             throw new \Exception(
-                "The relation {$relationName} does not exist in " .
-                    get_class($this->model)
+                "The relation {$relationName} does not exist in " . get_class($this->model)
             );
         }
 
         $relation = $this->model->$relationName();
-
         $relatedModelClass = $relation->model();
-
         $relatedModel = new $relatedModelClass();
-
         $relatedBuilder = $relatedModelClass::query();
 
         if ($callback) {
-            call_user_func(
-                $callback,
-                $relatedBuilder
-            );
+            call_user_func($callback, $relatedBuilder);
         }
-
-        $conditions = [];
 
         $relatedTable = $relatedModel->table();
         $parentTable = $this->model->table();
 
+        $conditions = [];
+
+        // Relación entre las tablas
         $conditions[] =
             "{$relatedTable}.{$relation->foreignKey()} = " .
             "{$parentTable}.{$relation->localKey()}";
 
+        // Condiciones adicionales del whereHas
         $relatedConditions = $relatedBuilder->getConditions();
 
-        foreach ($relatedConditions as $condition) {
-            $conditions[] = $condition;
+        if (!empty($relatedConditions)) {
+            $conditions[] = '(' . implode(' ', $relatedConditions) . ')';
         }
 
         return "EXISTS (
-            SELECT 1
-            FROM {$relatedTable}
-            WHERE " . implode(' AND ', $conditions) . "
-        )";
+        SELECT 1
+        FROM {$relatedTable}
+        WHERE " . implode(' AND ', $conditions) . "
+    )";
     }
 
     protected function buildConditions($wheres = null)
